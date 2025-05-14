@@ -1,4 +1,5 @@
-import { BaseElementNode, DirectiveNode, NodeTypes, SimpleExpressionNode } from "@vue/compiler-core";
+import type { BaseElementNode, DirectiveNode, SimpleExpressionNode } from "@vue/compiler-core";
+import { NodeTypes } from '@vue/compiler-core';
 import { useSFC, walkSFC } from "./utils";
 import { rules, tokenizer } from "./permission-parser";
 
