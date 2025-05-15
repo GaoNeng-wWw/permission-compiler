@@ -1,7 +1,8 @@
 import type { BaseElementNode, DirectiveNode, SimpleExpressionNode } from "@vue/compiler-core";
 import { NodeTypes } from '@vue/compiler-core';
 import { useSFC, walkSFC } from "./utils";
-import { rules, tokenizer } from "./permission-parser";
+import { rules, tokenizer } from "./permission-lexer";
+import { Parser } from "./permission-parser";
 
 const parseStaticPermission = (
   _ast: SimpleExpressionNode
@@ -17,8 +18,9 @@ const parseStaticPermission = (
   if (ast.type === 'TemplateLiteral') {
     throw new Error('Not implment Template parse yet.');
   }
-  // debugger;
-  const tokens = tokenizer(text, rules);
+  const tokens = tokenizer('Has(hello)', rules);
+  const parser = new Parser(tokens);
+  console.log(parser.run())
   return;
 }
 

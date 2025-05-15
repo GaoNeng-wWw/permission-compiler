@@ -1,109 +1,172 @@
-export enum TokenKind {
-  EOF,
-  IDENTIFIER,
-  LEFT_PARENTHESIS,
-  RIGHT_PARENTHESIS,
+import { toKeyAlias } from '@babel/types';
+import {Token, TokenKind} from './permission-lexer';
+
+export const enum BP {
+  DEFAULT_BP,
   COMMA,
-  AND,
-  OR,
-  NOT,
-  Has,
-  SOME,
-  EVERY
-}
-export type Token = {
-  kind: TokenKind,
-  humanKind: string,
-  char: string,
+  LOGICAL,
+  UNRAY,
+  CALL,
+  PRIMAR
 }
 
-type RuleHandle = (
-  args: {
-    tokens: Token[];
-    match: string;
-    advanceN: (val: number)=>void
-  }
-) => void;
+type Node = Expr;
 
-type Rule = [RegExp, RuleHandle]
+type Expr = FnCall | BinaryExpr | Identifier | PrefixExpr;
 
-export const tokenizer = (
-  code: string,
-  rules: Rule[]
-) => {
-  let matched = false;
-  let input = code;
-  let pos = 0;
-  const tokens:Token[] = [];
-  const reminder = () => {
-    return input.slice(pos);
+interface PrefixExpr {
+  type: 'PrefixExpr',
+  operator: Token;
+  expr: Expr;
+}
+
+interface FnCall {
+  type: 'FnCall',
+  name: Node;
+  args: Expr[];
+}
+
+interface BinaryExpr {
+  type: 'BinaryExpr',
+  operator: Token;
+  lhs:Expr;
+  rhs: Expr;
+}
+
+interface Identifier {
+  type: 'Identifier',
+  name: string;
+}
+
+export class Parser {
+  constructor(
+    private tokens: Token[]=[],
+    private pos=0,
+    private nudMap = new Map<TokenKind, NudHandle>(),
+    private ledMap = new Map<TokenKind, LedHandle>(),
+    private bpMap=new Map<TokenKind, BP>()
+  ){
+    this.setup();
   }
-  const advanceN = (val: number) => {
-    pos += val;
+
+  run(){
+    return this.parseExpr.bind(this)(BP.DEFAULT_BP);
   }
-  while(pos < input.length){
-    for(const [regExp, handle] of rules) {
-      if (regExp.test(input)) {
-        matched = true;
+
+  parseExpr(bp:BP){
+    const token = this.peek();
+    const tokenKind = token.kind;
+    const nud = this.nudMap.get(tokenKind);
+    if (!nud) {
+      throw new Error(`Except token ${TokenKind[token.kind]}`);
+    }
+    let lhs = nud();
+    while (
+      this.bpMap.get(this.peek().kind) !== undefined && 
+      this.bpMap.get(this.peek().kind)! > bp
+    ) {
+      const cur = this.peek();
+      const tk = cur.kind;
+      const led = this.ledMap.get(tk);
+      if(!led){
+        throw new Error(`Except for token ${cur.humanKind}`);
       }
-      const match = regExp.exec(reminder());
-      if (!match) {
-        continue
+      lhs = led(lhs, bp);
+    }
+    return lhs;
+  }
+  parsePrefix(){
+    const operator = this.next();
+    const expr = this.parseExpr(BP.UNRAY);
+    return {
+      type:  'PrefixExpr',
+      operator,
+      expr
+    } as PrefixExpr
+  }
+  parseBinary(lhs: Expr){
+    const operator = this.next();
+    const rhs = this.parseExpr(BP.DEFAULT_BP);
+    return {
+      type: 'BinaryExpr',
+      lhs,
+      rhs,
+      operator,
+    } as BinaryExpr;
+  }
+  parsePrimar(){
+    const name = this.next().char;
+    return {
+      type: 'Identifier',
+      name,
+    } as Identifier;
+  }
+  parseGroup(){
+    this.expect(TokenKind.LEFT_PARENTHESIS);
+    const expr = this.parseExpr(BP.DEFAULT_BP);
+    this.expect(TokenKind.RIGHT_PARENTHESIS);
+    return expr;
+  }
+  parseCall(
+    lhs: Expr
+  ){
+    debugger;
+    this.next();
+    const args:Expr[] = [];
+    while (this.hasToken() && this.peek().kind !== TokenKind.RIGHT_PARENTHESIS) {
+      const expr = this.parseExpr(BP.LOGICAL);
+      args.push(expr);
+      const nxt = this.peek();
+      if (nxt.kind !== TokenKind.EOF && nxt.kind !== TokenKind.RIGHT_PARENTHESIS) {
+        this.expect(TokenKind.COMMA);
       }
-      handle({tokens, match: match[0], advanceN });
-      break;
     }
-    if (!matched) {
-      throw new Error(`Bad Input ${input}`);
-    }
+    this.expect(TokenKind.RIGHT_PARENTHESIS);
+    return {
+      type: 'FnCall',
+      name: lhs,
+      args,
+    } as FnCall;
   }
-  tokens.push({kind: TokenKind.EOF, humanKind: 'eof', char: '0'});
-  return tokens;
-}
-
-const defaultHandle = (kind: TokenKind)=>{
-  return (({tokens, advanceN, match}) => {
-    tokens.push({kind, char: match, humanKind: TokenKind[kind]});
-    advanceN(match.length)
-  }) as RuleHandle;
-}
-const skip:RuleHandle = ({match,advanceN}) => {
-  advanceN(match.length);
-}
-
-const BUILT_IN = {
-  'HAS': TokenKind.Has,
-  'SOME': TokenKind.SOME,
-  'EVERY': TokenKind.EVERY
-}
-
-const identifier: RuleHandle = ({match,advanceN,tokens}) => {
-  let token:Token;
-  if (BUILT_IN[match as keyof typeof BUILT_IN]){
-    token = {
-      kind: BUILT_IN[match as keyof typeof BUILT_IN],
-      char: match,
-      humanKind: TokenKind[BUILT_IN[match as keyof typeof BUILT_IN]]
+  expect(kind: TokenKind, err?: string) {
+    const token = this.peek();
+    if (token.kind !== kind) {
+      if (err) {
+        throw new Error(err);
+      }
+      throw new Error(`Expcetion ${TokenKind[kind]} but find ${TokenKind[token.kind]}`);
     }
-  } else {
-    token = {
-      kind: TokenKind.IDENTIFIER,
-      char: match,
-      humanKind: TokenKind[TokenKind.IDENTIFIER]
-    }
+    return this.next();
   }
-  advanceN(match.length);
-  tokens.push(token);
+  hasToken(){
+    return this.pos < this.tokens.length && this.tokens[this.pos].kind !== TokenKind.EOF;
+  }
+  peek(){
+    return this.tokens[this.pos];
+  }
+  next(){
+    const token = this.peek();
+    this.pos+=1;
+    return token;
+  }
+  nud(bp:BP, kind: TokenKind, f: NudHandle){
+    this.bpMap.set(kind, BP.PRIMAR);
+    this.nudMap.set(kind, f);
+  }
+  led(bp: BP, kind: TokenKind, f: LedHandle) {
+    this.bpMap.set(kind, bp);
+    this.ledMap.set(kind, f);
+  }
+  setup(){
+    this.led(BP.LOGICAL,    TokenKind.AND,              this.parseBinary.bind(this) );
+    this.led(BP.LOGICAL,    TokenKind.OR,               this.parseBinary.bind(this) );
+    this.led(BP.CALL,       TokenKind.LEFT_PARENTHESIS, this.parseCall.bind(this)   );
+
+    this.nud(BP.LOGICAL,    TokenKind.NOT,              this.parsePrefix.bind(this) );
+    this.nud(BP.PRIMAR,     TokenKind.IDENTIFIER,       this.parsePrimar.bind(this) );
+    this.nud(BP.DEFAULT_BP, TokenKind.LEFT_PARENTHESIS, this.parseGroup.bind(this)  );
+  }
 }
-export const rules: Rule[] = [
-  [/^\ /, skip],
-  [/^And|^&&|^AND|^\&/, defaultHandle(TokenKind.AND)],
-  [/^Or|^\|\||^OR|^\|/, defaultHandle(TokenKind.OR)],
-  [/^Not|^!|^NOT/, defaultHandle(TokenKind.NOT)],
-  [/^Some/, defaultHandle(TokenKind.SOME)],
-  [/^Every/, defaultHandle(TokenKind.EVERY)],
-  [/^Has/, defaultHandle(TokenKind.Has)],
-  [/^\(/, defaultHandle(TokenKind.LEFT_PARENTHESIS)],
-  [/^\)/, defaultHandle(TokenKind.RIGHT_PARENTHESIS)],
-  [/[a-zA-Z_][a-zA-Z0-9_]*/, identifier]
-]
+
+type LedHandle = (lhs: Expr, bp:BP) => Node;
+type NudHandle = () => Node;
