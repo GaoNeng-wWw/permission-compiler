@@ -1,27 +1,33 @@
 import type { BaseElementNode, DirectiveNode, SimpleExpressionNode } from "@vue/compiler-core";
-import { NodeTypes } from '@vue/compiler-core';
+import { createObjectProperty, createSimpleExpression, NodeTypes } from '@vue/compiler-core';
 import { useSFC, walkSFC } from "./utils";
 import { rules, tokenizer } from "./permission-lexer";
 import { Parser } from "./permission-parser";
+import { objectGenerate } from "./ir";
+import { PermissionExpr } from "../src/directive/v-permission";
 
 const parseStaticPermission = (
   _ast: SimpleExpressionNode
 ) => {
-  const ast = _ast.ast;
-  if (!ast){
+  const vueAST = _ast.ast;
+  if (!vueAST){
     return ;
   }
   let text = '';
-  if(ast.type === 'StringLiteral'){
-    text = ast.value;
+  if(vueAST.type === 'StringLiteral'){
+    text = vueAST.value;
   }
-  if (ast.type === 'TemplateLiteral') {
+  if (vueAST.type === 'TemplateLiteral') {
     throw new Error('Not implment Template parse yet.');
   }
-  const tokens = tokenizer('Has(hello)', rules);
+  const tokens = tokenizer(text, rules);
   const parser = new Parser(tokens);
-  console.log(parser.run())
-  return;
+  const ast = parser.run();
+  const expr = objectGenerate(ast);
+  if (!expr) {
+    throw new Error('Unknown Error');
+  }
+  return expr;
 }
 
 export default (
@@ -65,7 +71,19 @@ export default (
     if (directive.exp.type !== NodeTypes.SIMPLE_EXPRESSION){
       continue;
     }
-    parseStaticPermission(directive.exp);
+
+    const permissionExprAstIR = parseStaticPermission(directive.exp);
+    if (!permissionExprAstIR){
+      return code;
+    }
+    console.log(permissionExprAstIR)
+    
+    // console.log(
+    //   createObjectProperty('k', createSimpleExpression('v',true))
+    // )
+
+    // console.log(directive.exp.);
+    // directive.exp = createObjectExpression([{''}])
   }
   return code;
 }

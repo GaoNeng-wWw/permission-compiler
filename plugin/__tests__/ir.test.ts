@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { objectGenerate } from '../obj-gen';
+import { objectGenerate } from '../ir';
 import { TokenKind } from '../permission-lexer';
 import { BinaryExpr, FnCall, Identifier, PrefixExpr } from '../permission-parser';
 

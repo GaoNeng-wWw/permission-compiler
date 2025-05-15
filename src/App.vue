@@ -7,7 +7,7 @@ const bind = ref('permission-2');
 
 
 <template>
-  <span v-permission="'test'">You Have Permission</span>
+  <span v-permission="'test && bb'">You Have Permission</span>
   <!-- <span v-permission="bind">You Have Permission</span> -->
 </template>
 
