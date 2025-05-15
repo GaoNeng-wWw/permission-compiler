@@ -7,37 +7,31 @@ export const enum BP {
   LOGICAL,
   UNRAY,
   CALL,
-  PRIMAR
+  PRIMARY
 }
 
-type Node = Expr;
-
-type Expr = FnCall | BinaryExpr | Identifier | PrefixExpr;
-
-interface PrefixExpr {
+export type Node = Expr;
+export type Expr = FnCall | BinaryExpr | Identifier | PrefixExpr;
+export interface PrefixExpr {
   type: 'PrefixExpr',
   operator: Token;
   expr: Expr;
 }
-
-interface FnCall {
+export interface FnCall {
   type: 'FnCall',
   name: Node;
   args: Expr[];
 }
-
-interface BinaryExpr {
+export interface BinaryExpr {
   type: 'BinaryExpr',
   operator: Token;
   lhs:Expr;
   rhs: Expr;
 }
-
-interface Identifier {
+export interface Identifier {
   type: 'Identifier',
   name: string;
 }
-
 export class Parser {
   constructor(
     private tokens: Token[]=[],
@@ -150,7 +144,7 @@ export class Parser {
     return token;
   }
   nud(bp:BP, kind: TokenKind, f: NudHandle){
-    this.bpMap.set(kind, BP.PRIMAR);
+    this.bpMap.set(kind, BP.PRIMARY);
     this.nudMap.set(kind, f);
   }
   led(bp: BP, kind: TokenKind, f: LedHandle) {
@@ -163,7 +157,7 @@ export class Parser {
     this.led(BP.CALL,       TokenKind.LEFT_PARENTHESIS, this.parseCall.bind(this)   );
 
     this.nud(BP.LOGICAL,    TokenKind.NOT,              this.parsePrefix.bind(this) );
-    this.nud(BP.PRIMAR,     TokenKind.IDENTIFIER,       this.parsePrimar.bind(this) );
+    this.nud(BP.PRIMARY,     TokenKind.IDENTIFIER,       this.parsePrimar.bind(this) );
     this.nud(BP.DEFAULT_BP, TokenKind.LEFT_PARENTHESIS, this.parseGroup.bind(this)  );
   }
 }
