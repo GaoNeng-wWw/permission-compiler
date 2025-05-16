@@ -6,11 +6,10 @@ const permission = ()=>{
   return {
     name: 'vite-plugin-vue-permission',
     transform(code, id, options) {
-      if (!id.endsWith('.ts') && !id.endsWith('vue')){
+      if (!id.endsWith('vue')){
         return code;
       }
-      permissionTransform(code, id);
-      return code;
+      return permissionTransform(code, id);
     },
     enforce: 'pre',
   } as Plugin;

@@ -5,5 +5,5 @@ import inspect from 'vite-plugin-inspect';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [inspect() ,vue(), permission()],
+  plugins: [inspect(),vue(),permission()],
 })

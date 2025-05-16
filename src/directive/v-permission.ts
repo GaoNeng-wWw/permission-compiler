@@ -18,7 +18,7 @@ const judge = (expr: PermissionExpr, userPermission: string[]):boolean => {
     return judge(expr.lhs, userPermission) || judge(expr.rhs, userPermission);
   }
   if (expr.type === 'NOT'){
-    return judge(expr.expr, userPermission);
+    return !judge(expr.expr, userPermission);
   }
   return false;
 }
@@ -58,6 +58,7 @@ const isValid = (value: string | PermissionExpr) => {
   if (typeof value === 'string') {
     return permissions.value.includes(value);
   } else {
+    debugger;
     return judge(value, permissions.value)
   }
 }

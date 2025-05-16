@@ -1,10 +1,9 @@
-import type { BaseElementNode, DirectiveNode, SimpleExpressionNode } from "@vue/compiler-core";
-import { createObjectProperty, createSimpleExpression, NodeTypes } from '@vue/compiler-core';
+import { type BaseElementNode, type DirectiveNode, type SimpleExpressionNode } from "@vue/compiler-core";
+import { NodeTypes } from '@vue/compiler-core';
 import { useSFC, walkSFC } from "./utils";
 import { rules, tokenizer } from "./permission-lexer";
 import { Parser } from "./permission-parser";
 import { objectGenerate } from "./ir";
-import { PermissionExpr } from "../src/directive/v-permission";
 
 const parseStaticPermission = (
   _ast: SimpleExpressionNode
@@ -33,11 +32,9 @@ const parseStaticPermission = (
 export default (
   code: string, id:string
 )=>{
-  if (!id.endsWith('.vue')){
-    return code;
-  }
-  const {script:scriptOption,template, scriptSetup} = useSFC({code,id});
+  const sfcAST = useSFC({code,id});
   const elements:BaseElementNode[] = [];
+  const template = sfcAST.template;
   if (!template?.ast) {
     return code;
   }
@@ -71,19 +68,13 @@ export default (
     if (directive.exp.type !== NodeTypes.SIMPLE_EXPRESSION){
       continue;
     }
-
     const permissionExprAstIR = parseStaticPermission(directive.exp);
     if (!permissionExprAstIR){
-      return code;
+      continue;
     }
-    console.log(permissionExprAstIR)
-    
-    // console.log(
-    //   createObjectProperty('k', createSimpleExpression('v',true))
-    // )
-
-    // console.log(directive.exp.);
-    // directive.exp = createObjectExpression([{''}])
+    const irCode = JSON.stringify(permissionExprAstIR).replaceAll('"',"'");
+    console.log(irCode);
+    code = code.replace(directive.loc.source, `v-permission="${irCode}"`);
   }
   return code;
 }

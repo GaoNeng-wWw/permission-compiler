@@ -1,6 +1,6 @@
 import { ref, type Ref } from "vue"
 
-const permissions:Ref<string[]> = ref(['permission-2']);
+const permissions:Ref<string[]> = ref(['aa']);
 
 export const useAccount = () => {
   const add = (permission: string) => {

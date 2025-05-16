@@ -1,15 +1,12 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
 import vPermission from './directive/v-permission';
-const bind = ref('permission-2');
-
 </script>
 
 
 <template>
-  <span v-permission="'test && bb'">You Have Permission</span>
-  <!-- <span v-permission="bind">You Have Permission</span> -->
+  <span v-permission="'aa || bb'">You Have Permission</span>
 </template>
+
 
 <style>
 html,body,#app {
