@@ -67,17 +67,6 @@ const defaultHandle = (kind: TokenKind)=>{
 const skip:RuleHandle = ({match,advanceN}) => {
   advanceN(match.length);
 }
-
-const identifier: RuleHandle = ({match,advanceN,tokens}) => {
-  let token:Token;
-  token = {
-    kind: TokenKind.IDENTIFIER,
-    char: match,
-    humanKind: TokenKind[TokenKind.IDENTIFIER]
-  }
-  advanceN(match.length);
-  tokens.push(token);
-}
 export const rules: Rule[] = [
   [/^\ /, skip],
   [/^And|^&&|^AND|^\&/, defaultHandle(TokenKind.AND)],
@@ -88,5 +77,5 @@ export const rules: Rule[] = [
   [/^Has/, defaultHandle(TokenKind.IDENTIFIER)],
   [/^\(/, defaultHandle(TokenKind.LEFT_PARENTHESIS)],
   [/^\)/, defaultHandle(TokenKind.RIGHT_PARENTHESIS)],
-  [/^[a-zA-Z_][a-zA-Z0-9_]*/, identifier]
+  [/^[a-zA-Z_][a-zA-Z0-9_]*/, defaultHandle(TokenKind.IDENTIFIER)]
 ]

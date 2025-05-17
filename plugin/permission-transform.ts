@@ -61,20 +61,24 @@ export default (
   if (!directives.length) {
     return code;
   }
+  directives.sort((a,b) => b.loc.start.offset - a.loc.start.offset)
   for (const directive of directives) {
-    if (!directive.exp){
+    if (!directive.exp || !directive.exp.ast){
       continue;
     }
     if (directive.exp.type !== NodeTypes.SIMPLE_EXPRESSION){
+      continue;
+    }
+    if (directive.exp.ast.type !== 'StringLiteral') {
       continue;
     }
     const permissionExprAstIR = parseStaticPermission(directive.exp);
     if (!permissionExprAstIR){
       continue;
     }
-    const irCode = JSON.stringify(permissionExprAstIR).replaceAll('"',"'");
-    console.log(irCode);
-    code = code.replace(directive.loc.source, `v-permission="${irCode}"`);
+    const l = directive.exp.loc.start.offset;
+    const r = directive.exp.loc.end.offset;
+    code = `${code.slice(0,l-1)}"${JSON.stringify(permissionExprAstIR).replaceAll('"',"'")}"${code.slice(r+1)}`
   }
   return code;
 }

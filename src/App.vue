@@ -4,7 +4,8 @@ import vPermission from './directive/v-permission';
 
 
 <template>
-  <span v-permission="'aa || bb'">You Have Permission</span>
+  <span v-permission="'a & b | !c'">You Have Permission</span>
+  <span v-permission="'!c'">You Have Permission</span>
 </template>
 
 

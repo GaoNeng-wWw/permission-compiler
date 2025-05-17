@@ -80,7 +80,7 @@ export class Parser {
   }
   parseBinary(lhs: Expr){
     const operator = this.next();
-    const rhs = this.parseExpr(BP.DEFAULT_BP);
+    const rhs = this.parseExpr(BP.LOGICAL);
     return {
       type: 'BinaryExpr',
       lhs,
@@ -88,7 +88,7 @@ export class Parser {
       operator,
     } as BinaryExpr;
   }
-  parsePrimar(){
+  parsePrimary(){
     const name = this.next().char;
     return {
       type: 'Identifier',
@@ -104,7 +104,6 @@ export class Parser {
   parseCall(
     lhs: Expr
   ){
-    debugger;
     this.next();
     const args:Expr[] = [];
     while (this.hasToken() && this.peek().kind !== TokenKind.RIGHT_PARENTHESIS) {
@@ -157,7 +156,7 @@ export class Parser {
     this.led(BP.CALL,       TokenKind.LEFT_PARENTHESIS, this.parseCall.bind(this)   );
 
     this.nud(BP.LOGICAL,    TokenKind.NOT,              this.parsePrefix.bind(this) );
-    this.nud(BP.PRIMARY,     TokenKind.IDENTIFIER,       this.parsePrimar.bind(this) );
+    this.nud(BP.PRIMARY,    TokenKind.IDENTIFIER,       this.parsePrimary.bind(this) );
     this.nud(BP.DEFAULT_BP, TokenKind.LEFT_PARENTHESIS, this.parseGroup.bind(this)  );
   }
 }

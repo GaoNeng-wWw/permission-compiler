@@ -1,5 +1,6 @@
-import {watch, type Directive} from 'vue';
+import {type Directive} from 'vue';
 import { useAccount } from '../mock-store';
+import {rules, tokenizer} from '../../plugin/permission-lexer';
 
 const judge = (expr: PermissionExpr, userPermission: string[]):boolean => {
   if (expr.type === 'HAS') {
@@ -58,7 +59,6 @@ const isValid = (value: string | PermissionExpr) => {
   if (typeof value === 'string') {
     return permissions.value.includes(value);
   } else {
-    debugger;
     return judge(value, permissions.value)
   }
 }
