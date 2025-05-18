@@ -77,5 +77,6 @@ export const rules: Rule[] = [
   [/^Has/, defaultHandle(TokenKind.IDENTIFIER)],
   [/^\(/, defaultHandle(TokenKind.LEFT_PARENTHESIS)],
   [/^\)/, defaultHandle(TokenKind.RIGHT_PARENTHESIS)],
+  [/^,/, defaultHandle(TokenKind.COMMA)],
   [/^[a-zA-Z_][a-zA-Z0-9_]*/, defaultHandle(TokenKind.IDENTIFIER)]
 ]

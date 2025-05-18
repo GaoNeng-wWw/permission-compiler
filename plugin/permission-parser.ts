@@ -142,7 +142,7 @@ export class Parser {
     this.pos+=1;
     return token;
   }
-  nud(bp:BP, kind: TokenKind, f: NudHandle){
+  nud(kind: TokenKind, f: NudHandle){
     this.bpMap.set(kind, BP.PRIMARY);
     this.nudMap.set(kind, f);
   }
@@ -155,9 +155,9 @@ export class Parser {
     this.led(BP.LOGICAL,    TokenKind.OR,               this.parseBinary.bind(this) );
     this.led(BP.CALL,       TokenKind.LEFT_PARENTHESIS, this.parseCall.bind(this)   );
 
-    this.nud(BP.LOGICAL,    TokenKind.NOT,              this.parsePrefix.bind(this) );
-    this.nud(BP.PRIMARY,    TokenKind.IDENTIFIER,       this.parsePrimary.bind(this) );
-    this.nud(BP.DEFAULT_BP, TokenKind.LEFT_PARENTHESIS, this.parseGroup.bind(this)  );
+    this.nud(TokenKind.NOT,              this.parsePrefix.bind(this) );
+    this.nud(TokenKind.IDENTIFIER,       this.parsePrimary.bind(this) );
+    this.nud(TokenKind.LEFT_PARENTHESIS, this.parseGroup.bind(this)  );
   }
 }
 
