@@ -2,10 +2,8 @@
 import vPermission from './directive/v-permission';
 </script>
 
-
 <template>
-  <span v-permission="'a & b | !c'">You Have Permission</span>
-  <span v-permission="'!c'">You Have Permission</span>
+  <span v-permission="'!a || (b || !c)'">完 全 勝 利</span>
 </template>
 
 

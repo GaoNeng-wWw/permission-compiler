@@ -1,5 +1,5 @@
-import { BinaryExpr, Expr, FnCall, Identifier, Node, PrefixExpr } from "./permission-parser";
-import { And, Every, Has, Not, Or, PermissionExpr, Some } from '../src/directive/v-permission';
+import type { BinaryExpr, FnCall, Identifier, Node, PrefixExpr } from "./permission-parser";
+import type { And, Every, Has, Not, Or, PermissionExpr, Some } from '../src/directive/v-permission';
 import { TokenKind } from "./permission-lexer";
 
 const builtInFnName = ['has','some','every'];

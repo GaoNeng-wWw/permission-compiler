@@ -5,7 +5,7 @@ export const enum BP {
   DEFAULT_BP,
   COMMA,
   LOGICAL,
-  UNRAY,
+  UNARY,
   CALL,
   PRIMARY
 }
@@ -71,7 +71,7 @@ export class Parser {
   }
   parsePrefix(){
     const operator = this.next();
-    const expr = this.parseExpr(BP.UNRAY);
+    const expr = this.parseExpr(BP.UNARY);
     return {
       type:  'PrefixExpr',
       operator,

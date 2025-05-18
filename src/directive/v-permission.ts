@@ -1,6 +1,8 @@
 import {type Directive} from 'vue';
 import { useAccount } from '../mock-store';
 import {rules, tokenizer} from '../../plugin/permission-lexer';
+import {Parser} from '../../plugin/permission-parser';
+import { objectGenerate } from '../../plugin/ir';
 
 const judge = (expr: PermissionExpr, userPermission: string[]):boolean => {
   if (expr.type === 'HAS') {
@@ -57,7 +59,15 @@ export type Not = {
 const isValid = (value: string | PermissionExpr) => {
   const { permissions } = useAccount();
   if (typeof value === 'string') {
-    return permissions.value.includes(value);
+    const tokens = tokenizer(value, rules);
+    const parser = new Parser(tokens);
+    const ast = parser.run();
+    const expr = objectGenerate(ast);
+    if (!expr){
+      throw new Error('Unknown error');
+    }
+    console.log(expr);
+    return judge(expr, permissions.value);
   } else {
     return judge(value, permissions.value)
   }
